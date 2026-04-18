@@ -15,6 +15,15 @@
       padding: 2rem 1rem;
     }
 
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
     h1 {
       font-size: 1.5rem;
       font-weight: 600;
@@ -24,14 +33,41 @@
     .subtitle {
       color: #94a3b8;
       font-size: 0.875rem;
-      margin-bottom: 2rem;
     }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+
+    #logout-btn {
+      background: #1e2130;
+      border: 1px solid #2d3148;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #logout-btn:hover { background: #2d3148; }
 
     .stats {
       display: flex;
       gap: 1rem;
       flex-wrap: wrap;
       margin-bottom: 2rem;
+    }
+
+    @media (max-width: 480px) {
+      .stat-card { min-width: calc(50% - 0.5rem); }
+      h1 { font-size: 1.2rem; }
+      td, th { padding: 0.6rem 0.75rem; font-size: 0.8rem; }
+      .msg { max-width: 160px; }
     }
 
     .stat-card {
@@ -139,8 +175,16 @@
   </style>
 </head>
 <body>
-  <h1>Naukri Profile Refresher</h1>
-  <p class="subtitle">Monitoring dashboard — auto-reads from <code>../logs/runs.json</code></p>
+  <div class="topbar">
+    <div>
+      <h1>Naukri Profile Refresher</h1>
+      <p class="subtitle">Monitoring dashboard — auto-reads from <code>../logs/runs.json</code></p>
+    </div>
+    <div class="user-info">
+      <span id="welcome-msg"></span>
+      <button id="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
 
   <div class="stats">
     <div class="stat-card total">
@@ -182,6 +226,16 @@
   </div>
 
   <script>
+    // Auth guard
+    const auth = JSON.parse(localStorage.getItem("nr_auth") || "null");
+    if (!auth) window.location.href = "login.html";
+    else document.getElementById("welcome-msg").textContent = "Hi, " + auth.username;
+
+    function logout() {
+      localStorage.removeItem("nr_auth");
+      window.location.href = "login.html";
+    }
+
     const LOG_URL = "../logs/runs.json";
 
     async function loadLogs() {
