@@ -1,0 +1,53 @@
+name: Naukri Profile Refresher
+
+on:
+  schedule:
+    # Runs every 30 min from 03:00–14:00 UTC = 08:30–19:30 IST
+    - cron: "0,30 3-13 * * 1-6"
+    - cron: "0 14 * * 1-6"
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q google-chrome-stable
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write config from secrets
+        run: |
+          cat > config.json <<EOF
+          {
+            "naukri": {
+              "email": "${{ secrets.NAUKRI_EMAIL }}",
+              "password": "${{ secrets.NAUKRI_PASSWORD }}"
+            }
+          }
+          EOF
+
+      - name: Run profile refresher
+        run: python profile_refresher.py --once
+
+      - name: Commit updated logs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add logs/runs.json
+          git diff --cached --quiet || git commit -m "chore: update run log [skip ci]"
+          git push
