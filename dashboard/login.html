@@ -162,7 +162,17 @@
 
       if (user) {
         localStorage.setItem("nr_auth", JSON.stringify({ username }));
-        window.location.href = "index.html";
+        // Seed this user's log store from server on first login
+        const userLogKey = "nr_logs_" + username;
+        if (!localStorage.getItem(userLogKey)) {
+          fetch("../logs/runs.json?t=" + Date.now())
+            .then(r => r.ok ? r.json() : [])
+            .then(records => localStorage.setItem(userLogKey, JSON.stringify(records)))
+            .catch(() => {})
+            .finally(() => { window.location.href = "index.html"; });
+        } else {
+          window.location.href = "index.html";
+        }
       } else {
         errorEl.textContent = "Invalid username or password.";
         errorEl.style.display = "block";

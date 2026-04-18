@@ -236,7 +236,17 @@
       window.location.href = "login.html";
     }
 
+    // Per-user log key
+    const USER_LOG_KEY = "nr_logs_" + (auth ? auth.username : "");
     const LOG_URL = "../logs/runs.json";
+
+    function getUserLogs() {
+      return JSON.parse(localStorage.getItem(USER_LOG_KEY) || "[]");
+    }
+
+    function saveUserLogs(records) {
+      localStorage.setItem(USER_LOG_KEY, JSON.stringify(records));
+    }
 
     async function loadLogs() {
       const loading = document.getElementById("loading");
@@ -247,45 +257,60 @@
       error.style.display   = "none";
       table.style.display   = "none";
 
+      // Try fetching latest from server and merge into user's local store
       try {
         const res = await fetch(LOG_URL + "?t=" + Date.now());
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const records = await res.json();
+        if (res.ok) {
+          const fetched = await res.json();
+          // Merge: add only new records (by timestamp) to this user's log
+          const existing = getUserLogs();
+          const existingTs = new Set(existing.map(r => r.timestamp));
+          const newRecords = fetched.filter(r => !existingTs.has(r.timestamp));
+          if (newRecords.length) {
+            saveUserLogs([...existing, ...newRecords].slice(-200));
+          }
+        }
+      } catch (_) {
+        // Offline or file missing — fall through to show cached data
+      }
 
-        // Stats
-        const total   = records.length;
-        const success = records.filter(r => r.status === "success").length;
-        const failed  = total - success;
-        const rate    = total ? Math.round((success / total) * 100) : 0;
+      const records = getUserLogs();
 
-        document.getElementById("stat-total").textContent   = total;
-        document.getElementById("stat-success").textContent = success;
-        document.getElementById("stat-failed").textContent  = failed;
-        document.getElementById("stat-rate").textContent    = rate + "%";
-
-        // Table — newest first
-        const tbody = document.getElementById("log-body");
-        tbody.innerHTML = "";
-        [...records].reverse().forEach((r, i) => {
-          const tr = document.createElement("tr");
-          const ts = new Date(r.timestamp).toLocaleString("en-GB", { timeZone: "UTC", hour12: false });
-          tr.innerHTML = `
-            <td>${total - i}</td>
-            <td>${ts}</td>
-            <td><span class="badge ${r.status}">${r.status}</span></td>
-            <td class="msg" title="${escHtml(r.message)}">${escHtml(r.message)}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        loading.style.display = "none";
-        table.style.display   = "table";
-      } catch (e) {
+      if (records.length === 0) {
         loading.style.display = "none";
         error.style.display   = "block";
-        error.textContent     = "Could not load logs: " + e.message +
-          ". Make sure logs/runs.json exists and you're serving this via a web server.";
+        error.textContent     = "No run history yet for your account.";
+        return;
       }
+
+      // Stats
+      const total   = records.length;
+      const success = records.filter(r => r.status === "success").length;
+      const failed  = total - success;
+      const rate    = total ? Math.round((success / total) * 100) : 0;
+
+      document.getElementById("stat-total").textContent   = total;
+      document.getElementById("stat-success").textContent = success;
+      document.getElementById("stat-failed").textContent  = failed;
+      document.getElementById("stat-rate").textContent    = rate + "%";
+
+      // Table — newest first
+      const tbody = document.getElementById("log-body");
+      tbody.innerHTML = "";
+      [...records].reverse().forEach((r, i) => {
+        const tr = document.createElement("tr");
+        const ts = new Date(r.timestamp).toLocaleString("en-GB", { timeZone: "UTC", hour12: false });
+        tr.innerHTML = `
+          <td>${total - i}</td>
+          <td>${ts}</td>
+          <td><span class="badge ${r.status}">${r.status}</span></td>
+          <td class="msg" title="${escHtml(r.message)}">${escHtml(r.message)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      loading.style.display = "none";
+      table.style.display   = "table";
     }
 
     function escHtml(str) {
