@@ -888,5 +888,10 @@
     "timestamp": "2026-05-20T12:41:32.969152+00:00",
     "status": "failed",
     "message": "Message: "
+  },
+  {
+    "timestamp": "2026-05-20T16:22:48.122738+00:00",
+    "status": "failed",
+    "message": "Message: element not interactable"
   }
 ]
