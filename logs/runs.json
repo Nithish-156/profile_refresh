@@ -968,5 +968,10 @@
     "timestamp": "2026-05-23T12:57:39.362609+00:00",
     "status": "failed",
     "message": "Message: "
+  },
+  {
+    "timestamp": "2026-05-23T14:26:25.334518+00:00",
+    "status": "failed",
+    "message": "Message: element not interactable"
   }
 ]
