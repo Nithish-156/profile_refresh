@@ -1,10 +1,5 @@
 [
   {
-    "timestamp": "2026-05-01T10:00:36.360335+00:00",
-    "status": "failed",
-    "message": "Message: element not interactable"
-  },
-  {
     "timestamp": "2026-05-01T11:36:59.800755+00:00",
     "status": "failed",
     "message": "Message: "
@@ -996,6 +991,11 @@
   },
   {
     "timestamp": "2026-06-15T18:22:13.682500+00:00",
+    "status": "failed",
+    "message": "Message: "
+  },
+  {
+    "timestamp": "2026-06-16T08:38:14.901486+00:00",
     "status": "failed",
     "message": "Message: "
   }
